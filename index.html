@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edward Chun</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Outfit:wght@200;300;400;600&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #050508;
+    --fg: #f0ece4;
+    --accent: #c8a46e;
+    --accent2: #6e8fc8;
+    --accent3: #c86e8f;
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    overflow-x: hidden;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'Outfit', sans-serif;
+    cursor: crosshair;
+    scroll-behavior: smooth;
+  }
+
+  canvas#particles {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 1;
+  }
+
+  canvas#waves {
+    position: fixed; bottom: 0; left: 0;
+    width: 100%; height: 300px;
+    z-index: 2; opacity: 0.4;
+  }
+
+  .glow-orbs {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0; pointer-events: none; overflow: hidden;
+  }
+
+  .orb {
+    position: absolute; border-radius: 50%;
+    filter: blur(80px); opacity: 0.15;
+    animation: orbFloat 20s ease-in-out infinite;
+  }
+  .orb:nth-child(1) { width: 600px; height: 600px; background: var(--accent); top: -10%; left: -5%; animation-duration: 25s; }
+  .orb:nth-child(2) { width: 500px; height: 500px; background: var(--accent2); top: 50%; right: -10%; animation-delay: -8s; animation-duration: 30s; }
+  .orb:nth-child(3) { width: 400px; height: 400px; background: var(--accent3); bottom: -5%; left: 30%; animation-delay: -15s; animation-duration: 22s; }
+
+  @keyframes orbFloat {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    25% { transform: translate(80px, -60px) scale(1.1); }
+    50% { transform: translate(-40px, 40px) scale(0.9); }
+    75% { transform: translate(60px, 80px) scale(1.05); }
+  }
+
+  /* ── HERO ── */
+  .content {
+    position: relative; z-index: 10;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    padding: 2rem;
+  }
+
+  .name-container { position: relative; margin-bottom: 1rem; }
+
+  .name {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-size: clamp(3rem, 10vw, 9rem);
+    letter-spacing: -0.02em; line-height: 1;
+    user-select: none; position: relative;
+    text-align: center; white-space: nowrap;
+  }
+
+  @keyframes shimmer { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+  .subtitle {
+    font-family: 'Outfit', sans-serif; font-weight: 200;
+    font-size: clamp(0.7rem, 1.4vw, 1rem);
+    letter-spacing: 0.25em; text-transform: uppercase;
+    color: rgba(240, 236, 228, 0.4);
+    margin-bottom: 3rem; overflow: hidden;
+    text-align: center; max-width: 750px; line-height: 2;
+  }
+  .subtitle span { display: inline-block; animation: revealUp 0.8s ease backwards; }
+  @keyframes revealUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  /* ── NAV PILLS ── */
+  .roles { display: flex; gap: 1.5rem; flex-wrap: wrap; justify-content: center; margin-bottom: 3rem; }
+
+  .role {
+    font-family: 'Outfit', sans-serif; font-weight: 300;
+    font-size: 0.85rem; letter-spacing: 0.15em; text-transform: uppercase;
+    padding: 0.6rem 1.5rem;
+    border: 1px solid rgba(200, 164, 110, 0.2); border-radius: 100px;
+    color: rgba(240, 236, 228, 0.6);
+    backdrop-filter: blur(10px); background: rgba(200, 164, 110, 0.03);
+    opacity: 0; animation: fadeInScale 0.6s ease forwards;
+    transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+    cursor: pointer; text-decoration: none; display: inline-block;
+  }
+  .role:hover {
+    border-color: var(--accent); color: var(--accent);
+    background: rgba(200, 164, 110, 0.08);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(200, 164, 110, 0.1);
+  }
+  .role:nth-child(1) { animation-delay: 1.2s; }
+  .role:nth-child(2) { animation-delay: 1.4s; }
+  .role:nth-child(3) { animation-delay: 1.6s; }
+
+  @keyframes fadeInScale { from { opacity: 0; transform: scale(0.9) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+
+  /* ── SCROLL HINT ── */
+  .scroll-hint {
+    position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
+    z-index: 10; display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+    opacity: 0; animation: fadeIn 1s ease 2.5s forwards; transition: opacity 0.5s;
+  }
+  .scroll-hint span { font-family: 'Outfit', sans-serif; font-weight: 200; font-size: 0.7rem; letter-spacing: 0.3em; text-transform: uppercase; color: rgba(240, 236, 228, 0.25); }
+  .scroll-line { width: 1px; height: 40px; background: linear-gradient(to bottom, var(--accent), transparent); animation: scrollPulse 2s ease-in-out infinite; }
+  @keyframes scrollPulse { 0%, 100% { opacity: 0.3; transform: scaleY(0.6); transform-origin: top; } 50% { opacity: 0.8; transform: scaleY(1); } }
+  @keyframes fadeIn { to { opacity: 1; } }
+
+  .trail-dot { position: fixed; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); pointer-events: none; z-index: 999; opacity: 0; mix-blend-mode: screen; }
+
+  /* ── MAGNETIC LETTERS ── */
+  .name .letter {
+    display: inline-block;
+    transition: transform 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+    background: linear-gradient(135deg, var(--fg) 0%, var(--accent) 30%, var(--fg) 50%, var(--accent2) 70%, var(--fg) 100%);
+    background-size: 300% 300%;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmer 8s ease-in-out infinite, letterDrop 1s cubic-bezier(0.19, 1, 0.22, 1) backwards;
+  }
+  .name .letter-space { display: inline-block; width: 0.3em; }
+  @keyframes letterDrop {
+    from { transform: translateY(-120px) rotate(15deg); opacity: 0; filter: blur(10px); }
+    to { transform: translateY(0) rotate(0); opacity: 1; filter: blur(0); }
+  }
+
+  /* ── PROJECTS ── */
+  .projects-section { position: relative; z-index: 10; padding: 6rem 2rem 8rem; }
+
+  .section-header { text-align: center; margin-bottom: 4rem; }
+  .section-header h2 {
+    font-family: 'Playfair Display', serif; font-weight: 900;
+    font-size: clamp(2rem, 5vw, 4rem);
+    background: linear-gradient(135deg, var(--fg), var(--accent));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    margin-bottom: 1rem;
+    opacity: 0; transform: translateY(30px);
+    transition: all 1s cubic-bezier(0.19, 1, 0.22, 1);
+  }
+  .section-header h2.visible { opacity: 1; transform: translateY(0); }
+  .section-header .line { width: 60px; height: 1px; background: var(--accent); margin: 0 auto; opacity: 0.4; }
+
+  .projects-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 2.5rem; max-width: 1100px; margin: 0 auto;
+  }
+
+  .project-card {
+    position: relative; border-radius: 16px; overflow: hidden;
+    border: 1px solid rgba(200, 164, 110, 0.1);
+    background: rgba(10, 10, 15, 0.6); backdrop-filter: blur(20px);
+    transition: all 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+    opacity: 0; transform: translateY(50px);
+    cursor: pointer; text-decoration: none; display: block; color: inherit;
+  }
+  .project-card.visible { opacity: 1; transform: translateY(0); }
+  .project-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 60px rgba(200, 164, 110, 0.1), 0 0 0 1px rgba(200, 164, 110, 0.2);
+  }
+  .project-card:hover .preview-overlay { opacity: 1; }
+
+  .preview-container { position: relative; width: 100%; height: 260px; overflow: hidden; background: #0a0a0f; }
+
+  .preview-frame {
+    width: 200%; height: 200%; border: none;
+    transform: scale(0.5); transform-origin: top left;
+    pointer-events: none;
+    transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+  }
+
+  .preview-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, transparent 40%, rgba(5, 5, 8, 0.85) 100%);
+    opacity: 0; transition: opacity 0.4s ease;
+    display: flex; align-items: flex-end; padding: 1.5rem;
+  }
+  .preview-overlay .visit-label {
+    font-family: 'Outfit', sans-serif; font-weight: 300;
+    font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--accent); display: flex; align-items: center; gap: 0.5rem;
+  }
+  .preview-overlay .visit-label svg { width: 14px; height: 14px; transition: transform 0.3s; }
+  .project-card:hover .visit-label svg { transform: translate(3px, -3px); }
+
+  .project-info { padding: 1.5rem; }
+  .project-info h3 { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 1.3rem; color: var(--fg); margin-bottom: 0.5rem; }
+  .project-info p { font-family: 'Outfit', sans-serif; font-weight: 200; font-size: 0.85rem; line-height: 1.6; color: rgba(240, 236, 228, 0.45); }
+  .project-info .project-tag {
+    display: inline-block; font-family: 'Outfit', sans-serif; font-weight: 400;
+    font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase;
+    padding: 0.3rem 0.8rem; border-radius: 100px; margin-top: 0.8rem;
+    border: 1px solid rgba(200, 164, 110, 0.15); color: rgba(200, 164, 110, 0.6);
+  }
+
+  /* ── STATS ── */
+  .stats-section { position: relative; z-index: 10; padding: 4rem 2rem 8rem; }
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3rem; max-width: 900px; margin: 0 auto; }
+  .stat-card { text-align: center; opacity: 0; transform: translateY(30px); transition: all 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
+  .stat-card.visible { opacity: 1; transform: translateY(0); }
+  .stat-card .number {
+    font-family: 'Playfair Display', serif; font-weight: 900; font-size: 3rem;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .stat-card .label { font-family: 'Outfit', sans-serif; font-weight: 200; font-size: 0.8rem; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(240, 236, 228, 0.4); margin-top: 0.5rem; }
+
+  /* ── FOOTER ── */
+  .site-footer { position: relative; z-index: 10; text-align: center; padding: 2rem; border-top: 1px solid rgba(200, 164, 110, 0.08); }
+  .site-footer p { font-family: 'Outfit', sans-serif; font-weight: 200; font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(240, 236, 228, 0.2); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .projects-grid { grid-template-columns: 1fr; max-width: 500px; }
+    .stats-row { grid-template-columns: 1fr; gap: 2rem; }
+  }
+  @media (max-width: 600px) {
+    .roles { flex-direction: column; align-items: center; }
+    .name { white-space: normal; text-align: center; font-size: clamp(2.5rem, 12vw, 5rem); }
+  }
+</style>
+</head>
+<body>
+
+<div class="glow-orbs"><div class="orb"></div><div class="orb"></div><div class="orb"></div></div>
+<canvas id="particles"></canvas>
+<canvas id="waves"></canvas>
+
+<!-- ═══════════ HERO ═══════════ -->
+<section class="content">
+  <div class="name-container">
+    <h1 class="name" id="nameEl"></h1>
+  </div>
+  <div class="subtitle" id="subtitle"></div>
+  <div class="roles">
+    <a class="role" href="about.html">About</a>
+    <a class="role" href="blog.html">Contrarian Thoughts</a>
+    <a class="role" href="#projects">Projects</a>
+  </div>
+</section>
+
+<!-- ═══════════ PROJECTS ═══════════ -->
+<section class="projects-section" id="projects">
+  <div class="section-header">
+    <h2 id="projectsTitle">Projects</h2>
+    <div class="line"></div>
+  </div>
+  <div class="projects-grid">
+    <a class="project-card" data-delay="0" href="https://cramwell.ai" target="_blank" rel="noopener">
+      <div class="preview-container">
+        <iframe class="preview-frame" src="https://cramwell.ai" loading="lazy" sandbox="allow-scripts allow-same-origin" tabindex="-1"></iframe>
+        <div class="preview-overlay"><span class="visit-label">Visit Site <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span></div>
+      </div>
+      <div class="project-info">
+        <h3>Cramwell.ai</h3>
+        <p>AI-powered academic planning for UChicago students. Course recommendations, schedule optimization, and smart advising.</p>
+        <span class="project-tag">EdTech · AI</span>
+      </div>
+    </a>
+    <a class="project-card" data-delay="200" href="https://dreampaint.ai" target="_blank" rel="noopener">
+      <div class="preview-container">
+        <iframe class="preview-frame" src="https://dreampaint.ai" loading="lazy" sandbox="allow-scripts allow-same-origin" tabindex="-1"></iframe>
+        <div class="preview-overlay"><span class="visit-label">Visit Site <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span></div>
+      </div>
+      <div class="project-info">
+        <h3>Dreampaint.ai</h3>
+        <p>Fine-tuned generative AI image models for enterprise clients. Serving 1.2M users across 40+ countries.</p>
+        <span class="project-tag">Generative AI · Enterprise</span>
+      </div>
+    </a>
+    <a class="project-card" data-delay="400" href="https://startnomadlife.com" target="_blank" rel="noopener">
+      <div class="preview-container">
+        <iframe class="preview-frame" src="https://startnomadlife.com" loading="lazy" sandbox="allow-scripts allow-same-origin" tabindex="-1"></iframe>
+        <div class="preview-overlay"><span class="visit-label">Visit Site <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span></div>
+      </div>
+      <div class="project-info">
+        <h3>StartNomadLife</h3>
+        <p>The guide to building a location-independent life. Resources, community, and tools for aspiring digital nomads.</p>
+        <span class="project-tag">Lifestyle · Community</span>
+      </div>
+    </a>
+    <div class="project-card" data-delay="600" style="cursor:default;">
+      <div class="preview-container" style="position:relative;">
+        <img src="garmentbag.jpg" alt="The Garment Bag" style="width:100%;height:100%;object-fit:cover;object-position:center 30%;">
+        <div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 50%,rgba(5,5,8,0.5) 100%);"></div>
+      </div>
+      <div class="project-info">
+        <h3>The Garment Bag</h3>
+        <p>My first business. A vintage haute-couture clothing store sourcing pieces from Milan and Seoul Fashion Week — finding hidden gems from emerging designers before anyone else did. Peaked at $2K MRR.</p>
+        <span class="project-tag">Fashion · E-Commerce</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ STATS ═══════════ -->
+<section class="stats-section">
+  <div class="stats-row">
+    <div class="stat-card" data-delay="0"><div class="number">1.2M</div><div class="label">Users Worldwide</div></div>
+    <div class="stat-card" data-delay="200"><div class="number">40+</div><div class="label">Countries</div></div>
+    <div class="stat-card" data-delay="400"><div class="number">2</div><div class="label">AI Companies</div></div>
+  </div>
+</section>
+
+<footer class="site-footer"><p>&copy; 2026 Edward Chun</p></footer>
+
+<div class="scroll-hint"><span>Scroll</span><div class="scroll-line"></div></div>
+
+<script>
+// ── NAME LETTERS ──
+const nameEl = document.getElementById('nameEl');
+let ci = 0;
+'EDWARD CHUN'.split('').forEach(char => {
+  if (char === ' ') {
+    const s = document.createElement('span');
+    s.className = 'letter-space';
+    nameEl.appendChild(s);
+  } else {
+    const s = document.createElement('span');
+    s.className = 'letter';
+    s.textContent = char;
+    s.style.animationDelay = `${0.15 + ci * 0.08}s`;
+    nameEl.appendChild(s);
+  }
+  ci++;
+});
+
+// ── SUBTITLE ──
+const stEl = document.getElementById('subtitle');
+'Founder, Angel Investor. Born and bred in South Korea, learning and working in Chicago.'.split('').forEach((c, i) => {
+  const s = document.createElement('span');
+  s.textContent = c === ' ' ? '\u00A0' : c;
+  s.style.animationDelay = `${0.8 + i * 0.018}s`;
+  stEl.appendChild(s);
+});
+
+// ── PARTICLES ──
+const pCanvas = document.getElementById('particles');
+const pCtx = pCanvas.getContext('2d');
+let mouseX = -1000, mouseY = -1000;
+function resizeCanvas() { pCanvas.width = innerWidth; pCanvas.height = innerHeight; }
+resizeCanvas(); addEventListener('resize', resizeCanvas);
+
+class Particle {
+  constructor() { this.reset(); }
+  reset() {
+    this.x = Math.random() * pCanvas.width; this.y = Math.random() * pCanvas.height;
+    this.size = Math.random() * 2 + 0.5;
+    this.speedX = (Math.random() - 0.5) * 0.4; this.speedY = (Math.random() - 0.5) * 0.4;
+    this.opacity = Math.random() * 0.5 + 0.1;
+    this.hue = Math.random() > 0.5 ? 38 : 215;
+  }
+  update() {
+    const dx = mouseX - this.x, dy = mouseY - this.y, dist = Math.sqrt(dx*dx+dy*dy);
+    if (dist < 200) { const f=(200-dist)/200; this.x-=(dx/dist)*f*2; this.y-=(dy/dist)*f*2; this.opacity=Math.min(0.8,this.opacity+0.02); }
+    else { this.opacity += (0.2-this.opacity)*0.01; }
+    this.x+=this.speedX; this.y+=this.speedY;
+    if(this.x<0||this.x>pCanvas.width) this.speedX*=-1;
+    if(this.y<0||this.y>pCanvas.height) this.speedY*=-1;
+  }
+  draw() { pCtx.beginPath(); pCtx.arc(this.x,this.y,this.size,0,Math.PI*2); pCtx.fillStyle=`hsla(${this.hue},50%,70%,${this.opacity})`; pCtx.fill(); }
+}
+const particles = Array.from({length:180},()=>new Particle());
+function drawConn() {
+  for(let i=0;i<particles.length;i++) for(let j=i+1;j<particles.length;j++){
+    const dx=particles[i].x-particles[j].x,dy=particles[i].y-particles[j].y,d=Math.sqrt(dx*dx+dy*dy);
+    if(d<120){const a=(1-d/120)*0.12; pCtx.beginPath(); pCtx.moveTo(particles[i].x,particles[i].y); pCtx.lineTo(particles[j].x,particles[j].y); pCtx.strokeStyle=`rgba(200,164,110,${a})`; pCtx.lineWidth=0.5; pCtx.stroke();}
+  }
+}
+function animP(){ pCtx.clearRect(0,0,pCanvas.width,pCanvas.height); particles.forEach(p=>{p.update();p.draw();}); drawConn(); requestAnimationFrame(animP); }
+animP();
+
+// ── WAVES ──
+const wC=document.getElementById('waves'),wX=wC.getContext('2d'); let wT=0;
+function rW(){wC.width=innerWidth;wC.height=300;} rW(); addEventListener('resize',rW);
+function dW(o,a,f,c,s){wX.beginPath();for(let x=0;x<=wC.width;x++){const y=wC.height/2+Math.sin(x*f+wT*s+o)*a+Math.sin(x*f*0.5+wT*s*1.3+o*2)*a*0.5;x===0?wX.moveTo(x,y):wX.lineTo(x,y);}wX.lineTo(wC.width,wC.height);wX.lineTo(0,wC.height);wX.closePath();wX.fillStyle=c;wX.fill();}
+function aW(){wX.clearRect(0,0,wC.width,wC.height);dW(0,30,.006,'rgba(200,164,110,0.06)',0.8);dW(2,25,.008,'rgba(110,143,200,0.05)',1.1);dW(4,20,.01,'rgba(200,110,143,0.04)',0.6);dW(6,35,.005,'rgba(200,164,110,0.03)',1.4);wT+=0.02;requestAnimationFrame(aW);}
+aW();
+
+// ── MOUSE TRAIL ──
+const trailDots=[];const TL=20;
+for(let i=0;i<TL;i++){const d=document.createElement('div');d.className='trail-dot';d.style.width=`${6-i*0.25}px`;d.style.height=`${6-i*0.25}px`;document.body.appendChild(d);trailDots.push({el:d,x:0,y:0});}
+document.addEventListener('mousemove',e=>{mouseX=e.clientX;mouseY=e.clientY;});
+function aT(){trailDots.forEach((d,i)=>{const t=i===0?{x:mouseX,y:mouseY}:trailDots[i-1];d.x+=(t.x-d.x)*(0.35-i*0.012);d.y+=(t.y-d.y)*(0.35-i*0.012);d.el.style.left=`${d.x-3}px`;d.el.style.top=`${d.y-3}px`;d.el.style.opacity=mouseX>0?(1-i/TL)*0.6:0;});requestAnimationFrame(aT);}
+aT();
+
+// ── MAGNETIC LETTERS ──
+const letters=document.querySelectorAll('.name .letter');
+document.addEventListener('mousemove',e=>{letters.forEach(l=>{const r=l.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,dx=e.clientX-cx,dy=e.clientY-cy,d=Math.sqrt(dx*dx+dy*dy);if(d<200){const f=(200-d)/200;l.style.transform=`translate(${dx*f*0.15}px,${dy*f*0.15}px) rotate(${dx*f*0.05}deg)`;}else{l.style.transform='translate(0,0) rotate(0deg)';}});});
+
+// ── SCROLL REVEALS ──
+const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){const d=e.target.dataset.delay||0;setTimeout(()=>e.target.classList.add('visible'),d);}});},{threshold:0.2});
+document.querySelectorAll('#projectsTitle,.project-card,.stat-card').forEach(el=>obs.observe(el));
+addEventListener('scroll',()=>{const h=document.querySelector('.scroll-hint');if(scrollY>100)h.style.opacity='0';},{passive:true});
+</script>
+</body>
+</html>
