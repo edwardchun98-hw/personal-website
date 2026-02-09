@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Hidden Costs — Bookmarks — Edward Chun</title>
+<link rel="icon" type="image/x-icon" href="../favicon.ico">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Outfit:wght@200;300;400;600&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --bg: #050508; --fg: #f0ece4; --accent: #c8a46e; --accent2: #6e8fc8; --accent3: #c86e8f; }
+
+  html, body {
+    overflow-x: hidden; background: var(--bg); color: var(--fg);
+    font-family: 'Outfit', sans-serif; cursor: crosshair;
+  }
+
+  canvas#particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+  .glow-orbs { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; overflow: hidden; }
+  .orb { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.1; animation: orbFloat 20s ease-in-out infinite; }
+  .orb:nth-child(1) { width: 500px; height: 500px; background: var(--accent); top: 10%; right: -10%; animation-duration: 25s; }
+  .orb:nth-child(2) { width: 400px; height: 400px; background: var(--accent2); bottom: 20%; left: -10%; animation-delay: -10s; animation-duration: 28s; }
+  @keyframes orbFloat { 0%,100%{transform:translate(0,0) scale(1);} 33%{transform:translate(30px,-40px) scale(1.05);} 66%{transform:translate(-20px,30px) scale(0.95);} }
+
+  .trail-dot { position: fixed; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); pointer-events: none; z-index: 999; opacity: 0; mix-blend-mode: screen; }
+
+  /* Back Nav */
+  .back-nav { position: fixed; top: 2rem; left: 2rem; z-index: 100; }
+  .back-nav a {
+    font-family: 'Outfit', sans-serif; font-weight: 300;
+    font-size: 0.8rem; letter-spacing: 0.15em; text-transform: uppercase;
+    color: rgba(240, 236, 228, 0.4); text-decoration: none;
+    display: flex; align-items: center; gap: 0.6rem; transition: all 0.3s ease;
+  }
+  .back-nav a:hover { color: var(--accent); }
+  .back-nav a svg { width: 16px; height: 16px; transition: transform 0.3s; }
+  .back-nav a:hover svg { transform: translateX(-4px); }
+
+  /* Page Nav */
+  .page-nav { position: fixed; top: 2rem; right: 2rem; z-index: 100; display: flex; gap: 1rem; }
+  .page-nav a {
+    font-family: 'Outfit', sans-serif; font-weight: 300;
+    font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase;
+    color: rgba(240, 236, 228, 0.35); text-decoration: none;
+    padding: 0.4rem 1rem; border: 1px solid rgba(200, 164, 110, 0.12);
+    border-radius: 100px; transition: all 0.3s;
+  }
+  .page-nav a:hover { color: var(--accent); border-color: var(--accent); }
+  .page-nav a.active { color: var(--accent); border-color: rgba(200, 164, 110, 0.3); }
+
+  /* Article */
+  .article {
+    position: relative; z-index: 10;
+    max-width: 700px; margin: 0 auto;
+    padding: 8rem 24px 100px;
+  }
+
+  .article-source {
+    font-size: 0.75rem; font-weight: 400; color: var(--accent);
+    text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .article-source::before { content: '◆'; font-size: 0.5rem; }
+
+  .article h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 4.5vw, 3rem); font-weight: 900;
+    line-height: 1.15; letter-spacing: -0.02em; margin-bottom: 20px;
+  }
+
+  .article-meta {
+    font-size: 0.85rem; font-weight: 200; color: rgba(240,236,228,0.4);
+    margin-bottom: 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  }
+
+  .original-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 0.78rem; color: var(--accent); text-decoration: none;
+    font-weight: 300; letter-spacing: 0.04em; opacity: 0.7;
+    transition: opacity 0.3s; margin-bottom: 48px;
+  }
+  .original-link:hover { opacity: 1; }
+  .original-link svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+  .divider { width: 60px; height: 1px; background: linear-gradient(to right, var(--accent), transparent); margin-bottom: 48px; }
+
+  /* Body text */
+  .article-body { font-size: 1.05rem; font-weight: 300; line-height: 1.8; color: rgba(240,236,228,0.82); }
+  .article-body h2 {
+    font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700;
+    color: var(--fg); margin: 56px 0 20px; letter-spacing: -0.01em;
+  }
+  .article-body p { margin-bottom: 24px; }
+  .article-body strong { color: var(--fg); font-weight: 600; }
+  .article-body em { color: var(--accent); font-style: italic; }
+  .article-body blockquote {
+    border-left: 2px solid var(--accent); padding: 16px 0 16px 24px;
+    margin: 36px 0; font-family: 'Playfair Display', serif;
+    font-size: 1.1rem; font-style: italic; line-height: 1.7; color: rgba(240,236,228,0.7);
+  }
+  .highlight { color: var(--accent); font-weight: 400; }
+
+  /* Author card */
+  .author-card {
+    margin-top: 64px; padding: 28px;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(200,164,110,0.12);
+    border-radius: 12px; font-size: 0.88rem; font-weight: 200;
+    color: rgba(240,236,228,0.5); line-height: 1.6;
+  }
+  .author-card strong { color: var(--fg); font-weight: 400; }
+
+  .footer { text-align: center; padding: 60px 24px; position: relative; z-index: 10; }
+  .footer p { font-size: 0.78rem; color: rgba(240,236,228,0.25); font-weight: 200; }
+
+  @media (max-width: 640px) {
+    .article { padding: 7rem 1.5rem 4rem; }
+    .page-nav { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="glow-orbs"><div class="orb"></div><div class="orb"></div></div>
+<canvas id="particles"></canvas>
+
+<div class="trail-dot" id="t0"></div><div class="trail-dot" id="t1"></div><div class="trail-dot" id="t2"></div><div class="trail-dot" id="t3"></div><div class="trail-dot" id="t4"></div>
+
+<nav class="back-nav">
+  <a href="../bookmarks.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M5 12l7 7M5 12l7-7"/></svg>
+    All Bookmarks
+  </a>
+</nav>
+
+<nav class="page-nav">
+  <a href="../about.html">About</a>
+  <a href="../blog.html">Contrarian Thoughts</a>
+  <a href="../bookmarks.html" class="active">Bookmarks</a>
+</nav>
+
+<div class="article">
+  <div class="article-source">Annie, Forever Always</div>
+  <h1>The Hidden Costs of the World's Most Expensive Schools</h1>
+
+  <div class="article-meta">
+    <span>Annie Dong</span>
+    <span>·</span>
+    <span>January 11, 2026</span>
+  </div>
+
+  <a href="https://anniedong.substack.com/p/the-hidden-costs-of-the-worlds-most" target="_blank" rel="noopener" class="original-link">
+    <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+    Read original on Substack
+  </a>
+
+  <div class="divider"></div>
+
+  <div class="article-body">
+
+    <p>By the time I graduate college, my education would've cost my family a collective <span class="highlight">$1.5M+</span> out of pocket.</p>
+
+    <p>I grew up in Shanghai, where I attended public school for two years followed by a renowned international school for three. I then moved to the US, where I attended a private Catholic school with the kids of billionaires in Washington. Simultaneously, I attended the prestigious Stanford Online High School to get a headstart on secondary credits. Following that, I attended an infamous New England Boarding School, then finally Columbia University.</p>
+
+    <p>Unlike many others, I feel painfully unqualified to comment on whether these schools are "worth it" or not. I cannot predict a counterfactual reality in which I did not attend these schools, so I will not be the annoying beholder of privilege who tells you that I could've, should've, would've been equally successful without said privilege.</p>
+
+    <p>I further challenge the ways in which we measure the worthiness of education. I detest the commercialization of intellectual training as the sole means to maximize one's future income. While education surely has a practical function — particularly in our world's increasingly competitive, capitalist societies — it is also undeniable that every individual has the inherent human right of knowing. <strong>Why would we ever withhold a young person's ability to access more books, engage in more discussions, and infinitely expand their mind?</strong> Education — and the freedom of thought it cultivates — is a basic yet luxurious necessity.</p>
+
+    <p>The bottom line is this: there is no question that I've received a rigorous education, although it is unclear to me whether the increase in educational quality has been proportional to the increase in price tag. There is also no question that my schools have set me up well for life, providing me with a formidable social network.</p>
+
+    <blockquote>This is why I believe that my unique contribution to the discussion at hand is a brutal examination of the intangible ways my schools have impacted me, and the (somewhat self-imposed) costs I did not know I would have to pay.</blockquote>
+
+    <h2>I viewed wealth differently and started spending more frivolously.</h2>
+
+    <p>Bluntly stated: for most of my life, <strong>I was poorer than all my friends at school.</strong> While my family is comfortably upper-middle class in China, we had to regularly make practical adjustments to our lives in order to afford my education. On the other hand, most of my friends sat in the top 0.5–1% of their respective countries.</p>
+
+    <p>To put this in more visceral terms: growing up, I lived in a one bedroom apartment in an older part of Shanghai, where the only decorations we had were family photos and my crayon scribbles. When I first transferred to my fancy international school and visited my friends' homes, I was shocked to discover that an apartment could contain more than two bedrooms and exhibit paintings and sculptures like the ones I saw in museums. Further, every single one of my friends had personal drivers who would pick us up to and from playdates, as well as personal cooks who would make us customized meals at sleepovers.</p>
+
+    <p>The same went in Washington, where I lived in a humble one bedroom apartment filled with Ikea furniture. It was a cozy, comfortable home I loved, but I was keenly aware of the fact that my peers all lived in lake-side, three story mansions with private pools and docks for their boats (plural).</p>
+
+    <p><strong>Throughout elementary and middle school, no one — not even my best friends — ever visited my homes.</strong></p>
+
+    <p>Gradually, my adolescent self grew accustomed to the differences between myself and my peers without even knowing the terms — like socio-economic status — that encapsulated what I discerned and felt. I began to anticipate, with each new family I would visit or playdate I would go on, paintings and private drivers, all while neutrally accepting that these luxuries were not a part of my everyday reality.</p>
+
+    <p>My internal normalization of grotesque wealth would be exponentially deepened at boarding school, which markets itself as an equalizing place — regardless of who one's father is, everyone lives in the same dorms, eats the same food, and attends the same classes. Yet in reality — in my experience — boarding schools' brute force painting-over of class differences only made them more jarring; our inability to openly discuss the co-living of children of private equity fund managers and children who lived in the public housing projects rendered dysfunctional by those very same managers cultivated an atmosphere of <strong>quiet yet entrenched divisions.</strong></p>
+
+    <p>In my first year of boarding school I learned that one can not only own a lakeside mansion, but seven across continents; that paintings can not only be hung in private homes but auctioned for millions; that bracelets can cost a year's worth of tuition; that <strong>the most expensive thing wealth could purchase was immaterial immunity — from rules, from inconveniences, from failures.</strong></p>
+
+    <p>I want to make it very clear that this is not to say that my high school peers were not compassionate and overwhelmingly good people. I met my closest friends who will certainly be bridesmaids at my wedding at boarding school. Rather, I am trying to explain how boarding schools naturally bring forth the mostly-unintended exhibition of immense wealth by teenagers who are insensitive by circumstance, not by choice.</p>
+
+    <p>At boarding school, my "bottom line" — my understanding of what it meant to be "rich" — was elevated tenfold. The upper-class luxuries I had silently normalized became basic expectations; rather than accepting that my peers were the top 1% of their countries, I would've been shocked to discover that they were not the top 1% of the world.</p>
+
+    <p>Consequently, this adjustment of expectations infiltrated the way I thought about and spent money. My personal bar for prices and spending moved up along my objective bar for wealth. While I had always previously bought clothes second hand and/or optimized for both style and affordability, in boarding school I found myself becoming more brand-focused than I had ever been. I so-badly wanted to own a Realisationpar dress — the it girl, online only brand that sells $150+ silk dresses — that I didn't even really realize that I don't find the styles and prints flattering, at all.</p>
+
+    <blockquote>I learned to subtly signal a level of wealth I did not possess, one of my most useful skills today.</blockquote>
+
+    <p>Until now, despite my sharp self-awareness, I am still plagued by this problem of expectations. I find myself comfortably engaging in discussions about which $1000+ puffer jacket I should purchase; hailing Ubers for friends whenever public transportation inconveniences us; wearing my Van Cleef necklace on a religious, daily basis; only feeling a twinge of embarrassment when I stumble upon commentaries about "rich private school kids at ivy league schools," when I realize that although I'd internally positioned myself on a detached moral high ground, <strong>I am no better</strong> — whether as a product of my environments, or my inherent vanity, or a mixture of both, I have been signaling, flaunting, shouting the very same exclusionary standards I'd encountered. I've grown to love the feeling of being perceived as richer than I am.</p>
+
+    <p>Truly, the only thing that may differentiate me from "those kids" is my self-awareness. And even that might be a stretch.</p>
+
+    <h2>I became extremely elitist.</h2>
+
+    <p>One of the most dangerous side effects of attending prestigious institutions is that you are constantly congratulated. These congratulations extend beyond the initial celebrations and cakes; they are conveyed in the glances from strangers on the street when you wear your school merch; in the requests from younger peers and cousins for mentoring; in the natural halo one seems to carry in situations which demand marginal intellectual participation, when you smile and say, "I go to (X school with a below 5% acceptance rate)" as if it were the most commonplace thing in the world.</p>
+
+    <p><strong>These congratulations are addictive.</strong> These congratulations convince you that they are well-deserved. You, most likely, do deserve them; you, most likely, have worked very hard to get to where you are. Yet the key point to recognize here is that you are receiving these congratulations not really due to your personal merits, but due to the fact that your associated organization's designer brand is perceived as inherent validation of your personal merits, even for someone — like the stranger on the street — who knows nothing about you.</p>
+
+    <p>I have been congratulated repeatedly for my entire life, and it's put me in an odd position where <strong>I can no longer distinguish my personal merits from my perceived personal merits.</strong> Simultaneously, it's put me in an odd position where I find myself unable to distinguish others' personal merits from their perceived personal merits, or lack thereof — otherwise known as elitism.</p>
+
+    <p>No matter how much I attempt to convince myself that this isn't me, if I take a deep, brutal look at myself, the fact is that I am inherently more immediately respecting of people whom I feel the urge to congratulate: those who attend(ed) prestigious schools, complete(d) prestigious internships, enter(ed) prestigious industries. I perceive them as more adjacent to myself, as a part of the in-group in which I am assumingly a member.</p>
+
+    <p>To be extremely vulnerable, I even have trouble connecting with my cousins because I find it difficult to truly summon a sense of admiration for their achievements and aspirations.</p>
+
+    <h2>I regressed to the mean and my risk-appetite shrunk.</h2>
+
+    <p>One of my hot takes is that surrounding oneself with conventionally successful people can oftentimes induce what I call <em>"regression to the mean"</em> — a tendency to mindlessly surrender to conventionally successful life paths that actually leave one painfully average at the end of the day.</p>
+
+    <p>I frame this "regression to the mean" as a disease of prestigious schools because when you are someone who has always done everything "right", and surrounded by other people who have always done everything "right", <strong>you live in a cesspool of fears for doing anything "wrong."</strong> This is most evident in university. As armies of right-doers enter their lowerclassmen years, they cling to whichever paths emerge as new definitions of success in a chaotic, post-college-applications, world.</p>
+
+    <p>In my Sophomore year I became convinced that management consulting was my only viable career path, upon witnessing the flurry of Linkedin notifications from upperclassmen I admired working at various big-name firms. This decision was made through a rash process of elimination in which I crossed off one of two options: investment banking and consulting. I never paused to consider other industries within finance, or backoffice roles like investor relations; I never considered the more research-oriented economic consulting, or forensic consulting; I never considered pursuing writing and forms of new media; I never considered nontechnical roles in tech or starting my own company — because I had such an abundance of conventionally successful people whose paths I could easily replicate, <strong>I simply never considered.</strong></p>
+
+    <p>I hope I am making it clear that there is absolutely nothing wrong with securing a well-paying corporate job. I also don't believe that everyone must or has the luxury to work on their greatest passion. As an international student, I surely do not. But I am saddened by the way that bright, young people immersed in bright, young environments are discouraged from thinking, asking and reflecting, and in turn too skipping the beautiful culmination of these three activities — <strong>aspiring.</strong></p>
+
+    <p>Since my Sophomore year, I am grateful to have stumbled across an industry which I genuinely enjoy, and which has completely redefined my view of success, failure, and risk-taking. What has since brought me the most self assurance (and success) of all is the recognition that <strong>surrounding one's self with successful people is just as important as clarifying how one defines success.</strong></p>
+
+    <h2>I recognized the existence of impenetrable communities.</h2>
+
+    <p>Finally, and most philosophically, my immersion in wealthy, prestigious circles has also taught me the truly impenetrable nature of billionaire communities. The wealthiest kids at my high school had grown up together, vacationed (or rather <em>summered</em>) on their adjacent properties in the Bahamas together, attended weddings (sometimes between their family members) together, played sports together, debuted as debutantes together, and dined together regularly at historic Upper East Side social clubs.</p>
+
+    <p>I do not know how much Succession's depiction of high-profile corporate deal-making — underground poker games between CEOs and handshakes on parked yachts — actually occurs, but I do know that the world's wealthiest truly live in deeply intertwined and secretive communities started by their great great grandparents and enforced when they are toddlers. It confirms the terrifying, politically-charged suspicion that <strong>there does exist a powerful rich people club to which entrance, being basically biological, cannot be easily purchased.</strong></p>
+
+    <p>To be frank, this was the disillusionment that propelled me away, after high school, from a career in social work and activism of which I had once dreamt. I am afraid of confessing this rather publicly, but I genuinely no longer believe in grassroots movements for social change. I do not believe that I am obligated to cultivate a positive social impact in the world (though I still want to). <strong>I believe in capital and its power, and I believe that whichever path allows me to accumulate the most capital will also empower me to make the most change, however defined.</strong></p>
+
+    <blockquote>In sum, my education has been truly costly in many ways. But this is for certain: it has equipped me with the capacity, perspective, and bravery to write about the messy thing I've become from a critical lens, and for that I am desperately grateful.</blockquote>
+
+    <div class="author-card">
+      <strong>Annie Dong</strong> writes Annie, Forever Always on Substack. This essay received 170+ likes and sparked wide discussion about class, privilege, and the hidden psychological costs of elite education.
+    </div>
+
+  </div>
+</div>
+
+<div class="footer"><p>&copy; 2026 Edward Chun</p></div>
+
+<script>
+const c=document.getElementById('particles'),x=c.getContext('2d');
+function rs(){c.width=window.innerWidth;c.height=window.innerHeight;}
+rs();window.addEventListener('resize',rs);
+const pts=[];for(let i=0;i<50;i++)pts.push({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*1.5+0.3,dx:(Math.random()-0.5)*0.25,dy:(Math.random()-0.5)*0.25,o:Math.random()*0.3+0.1});
+function dp(){x.clearRect(0,0,c.width,c.height);pts.forEach(p=>{p.x+=p.dx;p.y+=p.dy;if(p.x<0||p.x>c.width)p.dx*=-1;if(p.y<0||p.y>c.height)p.dy*=-1;x.beginPath();x.arc(p.x,p.y,p.r,0,Math.PI*2);x.fillStyle=`rgba(200,164,110,${p.o})`;x.fill();});requestAnimationFrame(dp);}dp();
+const td=[];const TL=15;let mX=-100,mY=-100;
+for(let i=0;i<TL;i++){const d=document.createElement('div');d.className='trail-dot';d.style.width=`${5-i*0.3}px`;d.style.height=`${5-i*0.3}px`;document.body.appendChild(d);td.push({el:d,x:0,y:0});}
+document.addEventListener('mousemove',e=>{mX=e.clientX;mY=e.clientY;});
+function at(){td.forEach((d,i)=>{const t=i===0?{x:mX,y:mY}:td[i-1];d.x+=(t.x-d.x)*(0.3-i*0.015);d.y+=(t.y-d.y)*(0.3-i*0.015);d.el.style.left=`${d.x-3}px`;d.el.style.top=`${d.y-3}px`;d.el.style.opacity=mX>0?(1-i/TL)*0.5:0;});requestAnimationFrame(at);}at();
+</script>
+</body>
+</html>
