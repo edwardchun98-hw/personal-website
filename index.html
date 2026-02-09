@@ -356,11 +356,25 @@ let ci = 0;
 
 // ── SUBTITLE ──
 const stEl = document.getElementById('subtitle');
-'Founder, Angel Investor. Born and bred in South Korea, learning and working in Chicago.'.split('').forEach((c, i) => {
-  const s = document.createElement('span');
-  s.textContent = c === ' ' ? ' ' : c;
-  s.style.animationDelay = `${0.8 + i * 0.018}s`;
-  stEl.appendChild(s);
+const stText = 'Founder, Angel Investor. Born and bred in South Korea, learning and working in Chicago.';
+const stWords = stText.split(' ');
+let sci = 0;
+stWords.forEach((word, wi) => {
+  word.split('').forEach(c => {
+    const s = document.createElement('span');
+    s.textContent = c;
+    s.style.animationDelay = `${0.8 + sci * 0.018}s`;
+    stEl.appendChild(s);
+    sci++;
+  });
+  if (wi < stWords.length - 1) {
+    const s = document.createElement('span');
+    s.textContent = '\u00A0';
+    s.style.animationDelay = `${0.8 + sci * 0.018}s`;
+    stEl.appendChild(s);
+    sci++;
+    stEl.appendChild(document.createElement('wbr'));
+  }
 });
 
 // ── PARTICLES ──
