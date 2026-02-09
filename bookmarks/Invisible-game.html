@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Invisible Game — Bookmarks — Edward Chun</title>
+<link rel="icon" type="image/x-icon" href="../favicon.ico">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Outfit:wght@200;300;400;600&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #050508;
+    --fg: #f0ece4;
+    --accent: #c8a46e;
+    --accent2: #6e8fc8;
+    --accent3: #c86e8f;
+  }
+
+  html, body {
+    overflow-x: hidden;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'Outfit', sans-serif;
+    cursor: crosshair;
+  }
+
+  canvas#particles {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 1;
+  }
+
+  .glow-orbs {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.1;
+    animation: orbFloat 20s ease-in-out infinite;
+  }
+
+  .orb:nth-child(1) {
+    width: 500px; height: 500px;
+    background: var(--accent);
+    top: 10%; right: -10%;
+    animation-duration: 25s;
+  }
+
+  .orb:nth-child(2) {
+    width: 400px; height: 400px;
+    background: var(--accent2);
+    bottom: 20%; left: -10%;
+    animation-delay: -10s;
+    animation-duration: 28s;
+  }
+
+  @keyframes orbFloat {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30px, -40px) scale(1.05); }
+    66% { transform: translate(-20px, 30px) scale(0.95); }
+  }
+
+  .trail {
+    position: fixed;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0;
+  }
+
+  /* Back Nav */
+  .back-nav {
+    position: fixed; top: 2rem; left: 2rem; z-index: 100;
+  }
+  .back-nav a {
+    font-family: 'Outfit', sans-serif; font-weight: 300;
+    font-size: 0.8rem; letter-spacing: 0.15em; text-transform: uppercase;
+    color: rgba(240, 236, 228, 0.4); text-decoration: none;
+    display: flex; align-items: center; gap: 0.6rem;
+    transition: all 0.3s ease;
+  }
+  .back-nav a:hover { color: var(--accent); }
+  .back-nav a svg { width: 16px; height: 16px; transition: transform 0.3s; }
+  .back-nav a:hover svg { transform: translateX(-4px); }
+
+  /* Page Nav */
+  .page-nav {
+    position: fixed; top: 2rem; right: 2rem; z-index: 100;
+    display: flex; gap: 1rem;
+  }
+  .page-nav a {
+    font-family: 'Outfit', sans-serif; font-weight: 300;
+    font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase;
+    color: rgba(240, 236, 228, 0.35); text-decoration: none;
+    padding: 0.4rem 1rem; border: 1px solid rgba(200, 164, 110, 0.12);
+    border-radius: 100px; transition: all 0.3s;
+  }
+  .page-nav a:hover { color: var(--accent); border-color: var(--accent); }
+  .page-nav a.active { color: var(--accent); border-color: rgba(200, 164, 110, 0.3); }
+
+  /* Article */
+  .article {
+    position: relative;
+    z-index: 10;
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 8rem 24px 100px;
+  }
+
+  .article-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    font-weight: 300;
+    color: var(--accent);
+    text-decoration: none;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 48px;
+    transition: opacity 0.3s;
+  }
+
+  .article-back:hover { opacity: 0.7; }
+
+  .article-source {
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .article-source::before {
+    content: '◆';
+    font-size: 0.5rem;
+  }
+
+  .article h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 4.5vw, 3rem);
+    font-weight: 900;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin-bottom: 20px;
+  }
+
+  .article-meta {
+    font-size: 0.85rem;
+    font-weight: 200;
+    color: rgba(240,236,228,0.4);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .original-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 300;
+    letter-spacing: 0.04em;
+    opacity: 0.7;
+    transition: opacity 0.3s;
+    margin-bottom: 48px;
+  }
+
+  .original-link:hover { opacity: 1; }
+
+  .original-link svg {
+    width: 14px; height: 14px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+  }
+
+  /* Divider */
+  .divider {
+    width: 60px;
+    height: 1px;
+    background: linear-gradient(to right, var(--accent), transparent);
+    margin-bottom: 48px;
+  }
+
+  /* Body text */
+  .article-body {
+    font-size: 1.05rem;
+    font-weight: 300;
+    line-height: 1.8;
+    color: rgba(240,236,228,0.82);
+  }
+
+  .article-body h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--fg);
+    margin: 56px 0 20px;
+    letter-spacing: -0.01em;
+  }
+
+  .article-body p {
+    margin-bottom: 24px;
+  }
+
+  .article-body strong {
+    color: var(--fg);
+    font-weight: 600;
+  }
+
+  .article-body em {
+    color: var(--accent);
+    font-style: italic;
+  }
+
+  .article-body blockquote {
+    border-left: 2px solid var(--accent);
+    padding: 16px 0 16px 24px;
+    margin: 36px 0;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    font-style: italic;
+    line-height: 1.7;
+    color: rgba(240,236,228,0.7);
+  }
+
+  .article-body ul {
+    margin: 16px 0 24px 0;
+    padding-left: 0;
+    list-style: none;
+  }
+
+  .article-body ul li {
+    position: relative;
+    padding-left: 20px;
+    margin-bottom: 12px;
+  }
+
+  .article-body ul li::before {
+    content: '—';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+  }
+
+  .highlight {
+    color: var(--accent);
+    font-weight: 400;
+  }
+
+  .stat {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  /* Author card */
+  .author-card {
+    margin-top: 64px;
+    padding: 28px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(200,164,110,0.12);
+    border-radius: 12px;
+    font-size: 0.88rem;
+    font-weight: 200;
+    color: rgba(240,236,228,0.5);
+    line-height: 1.6;
+  }
+
+  .author-card strong {
+    color: var(--fg);
+    font-weight: 400;
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 60px 24px;
+    position: relative;
+    z-index: 10;
+  }
+
+  .footer p {
+    font-size: 0.78rem;
+    color: rgba(240,236,228,0.25);
+    font-weight: 200;
+  }
+
+  @media (max-width: 640px) {
+    .article { padding: 7rem 1.5rem 4rem; }
+    .page-nav { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="glow-orbs">
+  <div class="orb"></div>
+  <div class="orb"></div>
+</div>
+
+<canvas id="particles"></canvas>
+
+<div class="trail" id="t0"></div>
+<div class="trail" id="t1"></div>
+<div class="trail" id="t2"></div>
+<div class="trail" id="t3"></div>
+<div class="trail" id="t4"></div>
+
+<nav class="back-nav">
+  <a href="../bookmarks.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M5 12l7 7M5 12l7-7"/></svg>
+    All Bookmarks
+  </a>
+</nav>
+
+<nav class="page-nav">
+  <a href="../about.html">About</a>
+  <a href="../blog.html">Contrarian Thoughts</a>
+  <a href="../bookmarks.html" class="active">Bookmarks</a>
+</nav>
+
+<div class="article">
+  <div class="article-source">Entrepreneurs First · Tokamak</div>
+  <h1>The Invisible Game: What It Really Takes to Build in America as an Immigrant Founder</h1>
+
+  <div class="article-meta">
+    <span>Lotti Siniscalco, Partner at Emergence Capital</span>
+    <span>·</span>
+    <span>January 21, 2026</span>
+  </div>
+
+  <a href="https://joinef.substack.com/p/the-invisible-game-what-it-really" target="_blank" rel="noopener" class="original-link">
+    <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+    Read original on Substack
+  </a>
+
+  <div class="divider"></div>
+
+  <div class="article-body">
+
+    <p>When I landed in the U.S. twenty years ago (alone, with no family or friends on this continent) I thought hard work would be enough. I was a 16 year old foreign exchange student from Italy with a thick accent, a suitcase, and the unshakeable belief that if I just pushed hard enough, I'd figure everything out.</p>
+
+    <p><strong>I was wrong about that.</strong></p>
+
+    <p>Today I'm a partner at <span class="highlight">Emergence Capital</span>, investing in the next generation of iconic AI companies. I work with some of the most ambitious founders in the world, many of them immigrants like me. Eric Yuan was denied a U.S. visa <strong>eight times</strong> before getting approved on the ninth try. He went on to build Zoom. Vipul Ved Prakash of Together.AI, William Ross and William Steenbergen of Federato, Tony Jamous of Oyster — these founders came here knowing the system wasn't built for them, and they built anyway.</p>
+
+    <p>I'm drawn to founders like this. The ones playing on hard mode. The ones who see obstacles as friction to work through, not reasons to quit. The ones who have something to prove… not to investors, but to themselves. They're often the best builders because they've had to be.</p>
+
+    <blockquote>This essay is for founders like them. For anyone navigating an invisible game while trying to build something that matters. You're not underqualified. You're not late. You're just playing a harder version of the same game, and nobody handed you the rulebook.</blockquote>
+
+    <h2>America Runs on Invisible Code</h2>
+
+    <p>Silicon Valley loves its meritocracy myth. Work hard, build something great, and you'll win. There's truth in that — ideas do matter, execution matters, the best products often rise to the top. But merit doesn't operate in a vacuum. It runs on infrastructure most people never see.</p>
+
+    <p>When I arrived, I didn't know you could apply to more than one college. Back home in Italy, you pick a single path at fourteen and that's it. I didn't know what credit scores were, or Greek life, or why everyone cared so much about college sports. I didn't understand office hours, networking events, or that talking about your accomplishments wasn't arrogance — it was just how things worked here.</p>
+
+    <p>Here's what I got wrong: I was terrified to ask for help. I watched American classmates build personal advisory boards while I tried to brute-force everything alone. I judged self-promotion as shallow (in European culture, understatement is valued). Here, if people don't know what you're building, they can't support you. <strong>But the game isn't rigged. It's just coded.</strong> Once you crack the code, you can remix it. That's where the most interesting innovation happens — at the edges, by people who see the system from the outside.</p>
+
+    <p>What finally changed everything was finding people willing to explain what I couldn't see. Other immigrants who'd figured it out a few years ahead of me. Americans who took the time to translate their world. One of them was my now partner at Emergence, Santi Subotovsky, who had a similar path from Argentina:</p>
+
+    <blockquote>"I didn't know anyone. No network, no credit history, no safety net. I couldn't even rent an apartment. Every VC firm told me my background wasn't right — wrong schools, wrong clubs. What changed everything was finding a few people who cared about me, not just what I could do for them."</blockquote>
+
+    <p>This is why I invest the way I do. I'm drawn to founders with intensity and resilience. People who've proven they can break through walls when everyone said it wasn't possible. But here's what separates good founders from great ones: understanding that <strong>relentless effort isn't enough.</strong> The founders I back actively look for ways to figure out the game, to find the shortcuts others miss. They turn constraints into competitive advantages.</p>
+
+    <h2>The Real Risk Immigrant Founders Carry</h2>
+
+    <p>Silicon Valley worships failure. The scrappy garage startup that pivots three times before finding product-market fit. The founder who crashes and burns, then comes back stronger. Failure here is a badge of honor.</p>
+
+    <p><strong>But that narrative only works if you're allowed to stay in the country when things go wrong.</strong></p>
+
+    <p>When an American founder's company fails, they take time off, maybe join another startup, maybe become an advisor or investor. When an immigrant founder's company fails, they might be rebuilding from another continent. Your visa was tied to that company. That job. That spouse's job. One bureaucratic error, one funding round that takes too long to close, one policy shift in Washington, and you're out.</p>
+
+    <p>This creates a low-grade anxiety that never fully goes away. You don't realize how much energy it drains until it's gone.</p>
+
+    <p>I came to the U.S. full of optimism, as this place felt full of possibility. Then reality hit. No safety net. No family. A visa that could disappear (and almost did, many times!) with one misstep. That optimism gave way to survival mode. For twenty years, I went through <strong>a dozen different visas</strong>, all tied to my status as a student, a wife, an employee at a specific company. I took "safe" jobs in traditional finance partly because the legal path was predictable. I wanted to take risks earlier, to explore, to bet on something uncertain. But you can't explore when your work permit depends on continuous employment.</p>
+
+    <p>The day I got my green card, something shifted. My career at Emergence accelerated. I could finally make high-conviction bets without hedging my entire existence. And when I became a U.S. citizen (twenty years after arriving, seven months pregnant) I sobbed in relief holding my little paper flag. <strong>The fog finally lifted.</strong> I could be bolder. More creative. More willing to be wrong.</p>
+
+    <blockquote>People told me I'd get the green card and still want something else. Hedonic adaptation, they said. They were wrong. A new car or a bigger apartment, sure, those lose their shine. But legal permanence doesn't. The freedom to take real risks, to build something ambitious without wondering if a visa denial will erase it all… that changes everything.</blockquote>
+
+    <h2>Should You Move Here to Build?</h2>
+
+    <p>If you're building an AI company and targeting American customers, the answer is simply <strong>yes</strong>. You need to be here. Not your head of sales. Not your advisor. You.</p>
+
+    <p>The U.S. isn't just leading AI development — it dominates AI adoption. Last year, <span class="stat">$109 billion</span> flowed into private AI investment here. <strong>78% of U.S. organizations</strong> now use AI in at least one business function, up from 55% the year before. AI startups captured nearly half of all venture capital deal value. This is where enterprise buyers are most willing to experiment, where feedback loops are fastest, where the infrastructure for scaling actually exists.</p>
+
+    <p>And here's something most people don't realize: <strong>it's easier to start from scratch in the U.S. than to "convert" traction from elsewhere.</strong> American investors rarely give credit for modest international revenue. A clean slate with a sharp U.S. go-to-market plan will get you further than a few foreign customers.</p>
+
+    <p>That said, moving here is not a small decision. You're not just risking capital — you're risking everything. Your ability to stay in the country. Your relationships. Your proximity to family. For American founders, failure means regrouping financially. For you, it might mean leaving.</p>
+
+    <h2>The Playbook I Wish I'd Had</h2>
+
+    <p>If you're an immigrant founder in the early stages, here's what actually matters:</p>
+
+    <ul>
+      <li><strong>Get legal help early.</strong> Even a few hours with the right immigration attorney can save you months of stress later. Start your green card process the moment you're eligible.</li>
+      <li><strong>Find mentors five to ten years ahead of you</strong>, especially people who've navigated visas while building. Many mistakes are avoidable if you can get someone to help you see around the corners.</li>
+      <li><strong>Build credit immediately.</strong> Open a credit card as soon as you arrive, even if it has terrible terms at first. These invisible systems shape everything.</li>
+      <li><strong>Create whatever safety net lets you sleep at night.</strong> A few months of savings. A strong legal team. A tight circle of friends you can call at 2 a.m.</li>
+    </ul>
+
+    <h2>Why This Matters</h2>
+
+    <p>The numbers tell the story: 1st gen immigrants make up about <strong>16% of the U.S. population</strong> but found <span class="stat">55%</span> of billion-dollar startups and <span class="stat">65%</span> of America's top AI companies. That makes them roughly <strong>3.5x more likely</strong> to build a unicorn than someone born here (and <strong>4x more likely</strong> in AI specifically).</p>
+
+    <p>This isn't a coincidence. These are people who've left everything behind to follow their vision. Who've already overcome more than most will face in a lifetime. Who understand what it means to build without a safety net and turn adversity into fuel.</p>
+
+    <p>The environment has only gotten harder. Immigration policy now shifts weekly. As of January 1, 2026, nationals from <strong>17 countries</strong> face complete visa bans, with an additional 19 countries under partial restrictions. Roughly 1 in 5 people seeking to legally immigrate to the U.S. are now barred from doing so. International students face deportations for expressing their perspectives on social media.</p>
+
+    <p>Starting a company is already a moonshot. Doing it while your legal right to be here is under constant review takes extraordinary courage.</p>
+
+    <blockquote>To every immigrant founder out there shipping product at midnight and filing visa paperwork at 2 a.m.: I see you.</blockquote>
+
+    <div class="author-card">
+      <strong>Lotti Siniscalco</strong> is a partner at Emergence Capital, where she invests in early stage AI companies. 80% of the companies she has backed have at least one 1st generation immigrant founder. She became a U.S. citizen in 2024 after twenty years and more than a dozen visas.
+    </div>
+
+  </div>
+</div>
+
+<div class="footer">
+  <p>© 2026 Edward Chun</p>
+</div>
+
+<script>
+const c=document.getElementById('particles'),x=c.getContext('2d');
+function rs(){c.width=window.innerWidth;c.height=window.innerHeight;}
+rs();window.addEventListener('resize',rs);
+const pts=[];for(let i=0;i<50;i++)pts.push({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*1.5+0.3,dx:(Math.random()-0.5)*0.25,dy:(Math.random()-0.5)*0.25,o:Math.random()*0.3+0.1});
+function dp(){x.clearRect(0,0,c.width,c.height);pts.forEach(p=>{p.x+=p.dx;p.y+=p.dy;if(p.x<0||p.x>c.width)p.dx*=-1;if(p.y<0||p.y>c.height)p.dy*=-1;x.beginPath();x.arc(p.x,p.y,p.r,0,Math.PI*2);x.fillStyle=`rgba(200,164,110,${p.o})`;x.fill();});requestAnimationFrame(dp);}dp();
+const trails=document.querySelectorAll('.trail');
+let mx=-100,my=-100;const tp=[];for(let i=0;i<trails.length;i++)tp.push({x:-100,y:-100});
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;});
+function at(){tp[0].x+=(mx-tp[0].x)*0.25;tp[0].y+=(my-tp[0].y)*0.25;for(let i=1;i<tp.length;i++){tp[i].x+=(tp[i-1].x-tp[i].x)*0.2;tp[i].y+=(tp[i-1].y-tp[i].y)*0.2;}trails.forEach((t,i)=>{t.style.left=tp[i].x-4+'px';t.style.top=tp[i].y-4+'px';t.style.opacity=mx>0?(1-i/trails.length)*0.5:0;t.style.transform=`scale(${1-i/trails.length*0.5})`;});requestAnimationFrame(at);}at();
+</script>
+</body>
+</html>
