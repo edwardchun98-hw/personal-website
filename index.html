@@ -117,6 +117,7 @@
   .role:nth-child(1) { animation-delay: 1.2s; }
   .role:nth-child(2) { animation-delay: 1.4s; }
   .role:nth-child(3) { animation-delay: 1.6s; }
+  .role:nth-child(4) { animation-delay: 1.8s; }
 
   @keyframes fadeInScale { from { opacity: 0; transform: scale(0.9) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
 
@@ -242,7 +243,8 @@
   }
   @media (max-width: 600px) {
     .roles { flex-direction: column; align-items: center; }
-    .name { white-space: normal; text-align: center; font-size: clamp(2.5rem, 12vw, 5rem); }
+    .name { white-space: nowrap; text-align: center; font-size: clamp(2.5rem, 11vw, 5rem); }
+    .subtitle { letter-spacing: 0.12em; font-size: 0.65rem; }
   }
 </style>
 </head>
@@ -356,7 +358,7 @@ let ci = 0;
 const stEl = document.getElementById('subtitle');
 'Founder, Angel Investor. Born and bred in South Korea, learning and working in Chicago.'.split('').forEach((c, i) => {
   const s = document.createElement('span');
-  s.textContent = c === ' ' ? '\u00A0' : c;
+  s.textContent = c === ' ' ? ' ' : c;
   s.style.animationDelay = `${0.8 + i * 0.018}s`;
   stEl.appendChild(s);
 });
