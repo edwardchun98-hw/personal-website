@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Don't Be a Badge Collector — Bookmarks — Edward Chun</title>
+<link rel="icon" type="image/x-icon" href="../favicon.ico">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Outfit:wght@200;300;400;600&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --bg: #050508; --fg: #f0ece4; --accent: #c8a46e; --accent2: #6e8fc8; --accent3: #c86e8f; }
+
+  html, body {
+    overflow-x: hidden; background: var(--bg); color: var(--fg);
+    font-family: 'Outfit', sans-serif; cursor: crosshair;
+  }
+
+  canvas#particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+  .glow-orbs { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; overflow: hidden; }
+  .orb { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.1; animation: orbFloat 20s ease-in-out infinite; }
+  .orb:nth-child(1) { width: 500px; height: 500px; background: var(--accent); top: 10%; right: -10%; animation-duration: 25s; }
+  .orb:nth-child(2) { width: 400px; height: 400px; background: var(--accent2); bottom: 20%; left: -10%; animation-delay: -10s; animation-duration: 28s; }
+  @keyframes orbFloat { 0%,100%{transform:translate(0,0) scale(1);} 33%{transform:translate(30px,-40px) scale(1.05);} 66%{transform:translate(-20px,30px) scale(0.95);} }
+
+  .trail-dot { position: fixed; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); pointer-events: none; z-index: 999; opacity: 0; mix-blend-mode: screen; }
+
+  /* Back Nav */
+  .back-nav { position: fixed; top: 2rem; left: 2rem; z-index: 100; }
+  .back-nav a {
+    font-family: 'Outfit', sans-serif; font-weight: 300;
+    font-size: 0.8rem; letter-spacing: 0.15em; text-transform: uppercase;
+    color: rgba(240, 236, 228, 0.4); text-decoration: none;
+    display: flex; align-items: center; gap: 0.6rem; transition: all 0.3s ease;
+  }
+  .back-nav a:hover { color: var(--accent); }
+  .back-nav a svg { width: 16px; height: 16px; transition: transform 0.3s; }
+  .back-nav a:hover svg { transform: translateX(-4px); }
+
+  /* Page Nav */
+  .page-nav { position: fixed; top: 2rem; right: 2rem; z-index: 100; display: flex; gap: 1rem; }
+  .page-nav a {
+    font-family: 'Outfit', sans-serif; font-weight: 300;
+    font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase;
+    color: rgba(240, 236, 228, 0.35); text-decoration: none;
+    padding: 0.4rem 1rem; border: 1px solid rgba(200, 164, 110, 0.12);
+    border-radius: 100px; transition: all 0.3s;
+  }
+  .page-nav a:hover { color: var(--accent); border-color: var(--accent); }
+  .page-nav a.active { color: var(--accent); border-color: rgba(200, 164, 110, 0.3); }
+
+  /* Article */
+  .article {
+    position: relative; z-index: 10;
+    max-width: 700px; margin: 0 auto;
+    padding: 8rem 24px 100px;
+  }
+
+  .article-source {
+    font-size: 0.75rem; font-weight: 400; color: var(--accent);
+    text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .article-source::before { content: '◆'; font-size: 0.5rem; }
+
+  .article h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 4.5vw, 3rem); font-weight: 900;
+    line-height: 1.15; letter-spacing: -0.02em; margin-bottom: 20px;
+  }
+
+  .article-meta {
+    font-size: 0.85rem; font-weight: 200; color: rgba(240,236,228,0.4);
+    margin-bottom: 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  }
+
+  .original-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 0.78rem; color: var(--accent); text-decoration: none;
+    font-weight: 300; letter-spacing: 0.04em; opacity: 0.7;
+    transition: opacity 0.3s; margin-bottom: 48px;
+  }
+  .original-link:hover { opacity: 1; }
+  .original-link svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+  .divider { width: 60px; height: 1px; background: linear-gradient(to right, var(--accent), transparent); margin-bottom: 48px; }
+
+  /* Body text */
+  .article-body { font-size: 1.05rem; font-weight: 300; line-height: 1.8; color: rgba(240,236,228,0.82); }
+  .article-body h2 {
+    font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700;
+    color: var(--fg); margin: 56px 0 20px; letter-spacing: -0.01em;
+  }
+  .article-body h3 {
+    font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 700;
+    color: var(--fg); margin: 40px 0 16px;
+  }
+  .article-body p { margin-bottom: 24px; }
+  .article-body strong { color: var(--fg); font-weight: 600; }
+  .article-body em { color: var(--accent); font-style: italic; }
+  .article-body blockquote {
+    border-left: 2px solid var(--accent); padding: 16px 0 16px 24px;
+    margin: 36px 0; font-family: 'Playfair Display', serif;
+    font-size: 1.1rem; font-style: italic; line-height: 1.7; color: rgba(240,236,228,0.7);
+  }
+  .highlight { color: var(--accent); font-weight: 400; }
+
+  /* Author card */
+  .author-card {
+    margin-top: 64px; padding: 28px;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(200,164,110,0.12);
+    border-radius: 12px; font-size: 0.88rem; font-weight: 200;
+    color: rgba(240,236,228,0.5); line-height: 1.6;
+  }
+  .author-card strong { color: var(--fg); font-weight: 400; }
+
+  .footer { text-align: center; padding: 60px 24px; position: relative; z-index: 10; }
+  .footer p { font-size: 0.78rem; color: rgba(240,236,228,0.25); font-weight: 200; }
+
+  @media (max-width: 640px) {
+    .article { padding: 7rem 1.5rem 4rem; }
+    .page-nav { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="glow-orbs"><div class="orb"></div><div class="orb"></div></div>
+<canvas id="particles"></canvas>
+
+<nav class="back-nav">
+  <a href="../bookmarks.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M5 12l7 7M5 12l7-7"/></svg>
+    All Bookmarks
+  </a>
+</nav>
+
+<nav class="page-nav">
+  <a href="../about.html">About</a>
+  <a href="../blog.html">Contrarian Thoughts</a>
+  <a href="../bookmarks.html" class="active">Bookmarks</a>
+</nav>
+
+<div class="article">
+  <div class="article-source">Entrepreneurs First · Tokamak</div>
+  <h1>Don't Be a Badge Collector</h1>
+
+  <div class="article-meta">
+    <span>Matt Clifford, Cofounder of Entrepreneurs First and Chair of ARIA</span>
+    <span>·</span>
+    <span>September 18, 2025</span>
+  </div>
+
+  <a href="https://joinef.substack.com/p/dont-be-a-badge-collector" target="_blank" rel="noopener" class="original-link">
+    <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+    Read original on Substack
+  </a>
+
+  <div class="divider"></div>
+
+  <div class="article-body">
+
+    <p>Lots of young, ambitious people say they want to start companies. Very few do. <strong>The biggest barrier isn't lack of ideas, money, or talent. It's credentialism.</strong></p>
+
+    <h2>What's credentialism?</h2>
+
+    <p>Credentialism — or, less politely, <em>badge collecting</em> — is the belief that before you leap into becoming a founder, you need one more credential: a top university, another degree, a blue-chip job, another promotion. You think the next badge will make you "ready" or provide a safety net if you fail. Both beliefs are misplaced.</p>
+
+    <p>A lot of the time you'll have a choice — implicitly or explicitly — between starting a company and gaining another credential. The danger comes not because credentials are bad in themselves, but because <strong>they're addictive.</strong> The marginal credential doesn't feel like it will take you far from the path of becoming a founder, but the cumulative impact is huge.</p>
+
+    <blockquote>I've seen many brilliant 30-somethings still talking about starting something "one day", but too locked into their careers, pay packages, and lifestyles to do it. They never notice how the cost of leaving rises year by year.</blockquote>
+
+    <h2>Why credentials are a trap</h2>
+
+    <p>Credentialism harms would-be founders in four ways.</p>
+
+    <h3>1. Readiness</h3>
+
+    <p>In most professions, readiness is about ticking off prerequisites: no one wants an unqualified surgeon. But <strong>there are no prerequisites for becoming a founder</strong> other than wanting something to exist and believing that you can make it exist. You can't possibly have all the skills and experiences you'll need as a founder on day one. None of the great founders did; they acquired them largely by getting started. Determining whether you're a good founder is much more a discovery process — your founder skills are <em>procedurally generated</em> along the way — than an analytical one.</p>
+
+    <p>Few if any of the best founders I've worked with felt ready when they started. Credentialism tempts you to think that if you get one more badge, you'll feel ready — but the danger is that it will just stop you from ever making the leap.</p>
+
+    <h3>2. Validation</h3>
+
+    <p>Most degrees and many elite jobs reward you with third-party approval — the next grade, the partner's praise, the six-month review. It's addictive, and <strong>it wires you to seek validation from authority.</strong></p>
+
+    <p>As a founder, you need to get your dopamine hits only from making a product that customers pay for. A big danger is if you're used to praise, you start to believe that third-party validation can actually compensate for real-world demand (I'm always suspicious of startups that tout themselves as "award winning"). It's not just that you learn to enjoy praise, it's that you think it's important. The longer you ride the credentialism train, the harder it is to switch into a founder mindset.</p>
+
+    <h3>3. Status quo bias</h3>
+
+    <p>The point of a credential is that it represents adherence to well-established standards. That's useful in traditional careers, where employers want reliable signals. But <strong>great startups often come from breaking those conventions.</strong></p>
+
+    <p>The longer you spend in credential-heavy environments, the more you internalize other people's playbooks and learn to adapt to what people further up the hierarchy want to see. But founding a great company usually requires the opposite: you have to do something that experienced and successful people will think is impossible or undesirable. Unlearning the "impress the hierarchy" mindset is painful and gets harder the longer you're immersed in it.</p>
+
+    <h3>4. Risk</h3>
+
+    <p>Credentials are <strong>variance dampening.</strong> They make your path predictable: work hard, tick boxes, advance reliably. Startups are the opposite. They're about embracing variance — accepting higher volatility in exchange for a shot at an extraordinary outcome.</p>
+
+    <p>If you want the possibility of doing something exceptional, you have to become a variance seeker. You need to pursue opportunities that have lower median and higher variance outcomes; you have to <strong>reject consistent small wins in favor of consistent attempts to achieve huge wins.</strong></p>
+
+    <h2>How to escape credentialism</h2>
+
+    <p>The danger isn't in having credentials (many great founders did go to top universities or worked at elite firms). The danger is <strong>investing incremental years to collect incremental badges.</strong></p>
+
+    <p>The trick is to reframe your credentials as a reason to take risk, not to avoid it.</p>
+
+    <p>I quite often speak to ambitious people with degrees from a great university or internships in an AI lab or quant trading firm, who are absolutely terrified about doing anything that isn't similarly prestigious next. It should be the opposite. <strong>Your credentials set a floor under your career.</strong> If you're in this situation, you'll never be unemployable. You should see this as a safety net that gives you freedom to take risks.</p>
+
+    <blockquote>Your degree or prestigious first job isn't a reason to delay starting. It's the reason you can start now.</blockquote>
+
+    <h2>No more playbooks</h2>
+
+    <p>Part of why credentialism is so pervasive is that our education and early careers reward mastery of existing playbooks. There's a syllabus, a grading rubric, a hierarchy. The world of startups has none of that. <strong>It's the most objective test of all: can you build something people will pay for?</strong></p>
+
+    <p>Credentialism is deeply embedded in our whole culture of ambition, but the more ambitious you are — and the more you think you want to be a founder — the less you can afford to be sucked into it. The longer you wait to jump in, the harder it gets and the harder the transition.</p>
+
+    <blockquote>Greatness doesn't come from badges. Don't wait.</blockquote>
+
+    <div class="author-card">
+      <strong>Matt Clifford</strong> is the Cofounder of Entrepreneurs First, the world's leading talent investor, and Chair of ARIA (the UK's Advanced Research + Invention Agency). EF has helped create over 1,000 companies worth over $10B.
+    </div>
+
+  </div>
+</div>
+
+<div class="footer"><p>&copy; 2026 Edward Chun</p></div>
+
+<script>
+const c=document.getElementById('particles'),x=c.getContext('2d');
+function rs(){c.width=window.innerWidth;c.height=window.innerHeight;}
+rs();window.addEventListener('resize',rs);
+const pts=[];for(let i=0;i<50;i++)pts.push({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*1.5+0.3,dx:(Math.random()-0.5)*0.25,dy:(Math.random()-0.5)*0.25,o:Math.random()*0.3+0.1});
+function dp(){x.clearRect(0,0,c.width,c.height);pts.forEach(p=>{p.x+=p.dx;p.y+=p.dy;if(p.x<0||p.x>c.width)p.dx*=-1;if(p.y<0||p.y>c.height)p.dy*=-1;x.beginPath();x.arc(p.x,p.y,p.r,0,Math.PI*2);x.fillStyle=`rgba(200,164,110,${p.o})`;x.fill();});requestAnimationFrame(dp);}dp();
+const td=[];const TL=15;let mX=-100,mY=-100;
+for(let i=0;i<TL;i++){const d=document.createElement('div');d.className='trail-dot';d.style.width=`${5-i*0.3}px`;d.style.height=`${5-i*0.3}px`;document.body.appendChild(d);td.push({el:d,x:0,y:0});}
+document.addEventListener('mousemove',e=>{mX=e.clientX;mY=e.clientY;});
+function at(){td.forEach((d,i)=>{const t=i===0?{x:mX,y:mY}:td[i-1];d.x+=(t.x-d.x)*(0.3-i*0.015);d.y+=(t.y-d.y)*(0.3-i*0.015);d.el.style.left=`${d.x-3}px`;d.el.style.top=`${d.y-3}px`;d.el.style.opacity=mX>0?(1-i/TL)*0.5:0;});requestAnimationFrame(at);}at();
+</script>
+</body>
+</html>
